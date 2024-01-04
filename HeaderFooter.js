@@ -190,31 +190,43 @@ $(document).ready(() => {
   </div>
   `);
   
-  $.ajax({cache: false,
-    url: 'search.json',
-    dataType: 'json',});
-  $('#search').keyup(function(){
-    $('#result').html('');
-    $('#state').val('');
-    var searchField = $('#search').val();
-    var expression =  new RegExp(searchField, "i");
-
-    $getJSON('search.json', function(search){
-      $.each(search, function(key,value){
-        if(value.title.search(expression) != -1 || value.genre.search(expression) != -1 )
-        {
-          $('#result').append('<li class="list-group-item link-class><'+value.title+' | <span class="text-muted">'+value.genre+'</span>')
-
-        }
+  
+  $('#searchInput').keyup(() => {
+    const searchText = $('#searchInput').val().toLowerCase();
+   
+    axios.get('./ticket.json')
+      .then(response => {
+        const movie = response.data.movies
+      
+        const filtermovies = movie.filter(item =>
+          item._movieName.toLowerCase().includes(searchText)
+        );
+        setTimeout(() => {
+          displayMovies(filtermovies);
+        }, 1000); 
+       
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
       });
-    });
-
-    $('#result').on('click','li', function(){
-      var click_text = $(this).text().split('|');
-
-      $('#search').val($.trim(click_text[0]));
-      $('#result').html('');
-    });
-
   });
+
+  function displayMovies(movies) {
+    const resultList = $('#result');
+
+   
+    resultList.empty();
+
+    movies.forEach(movie => {
+      const listItem = $('<li>').addClass('movie-item');
+      const image = $('<img>').attr('src', movie._image).addClass('movie-image');
+      const title = $('<h3>').text(movie._movieName).addClass('movie-title');
+      const artist = $('<p>').text('Artist: ' + movie._artist).addClass('movie-artist');
+
+      listItem.append(image, title, artist);
+      resultList.append(listItem);
+    });
+  }
+
+  
 });
